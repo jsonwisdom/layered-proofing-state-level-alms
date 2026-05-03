@@ -9,9 +9,46 @@ Epoch: `GROK_EPOCH_001`
 
 ## Mission
 
-Create an adversarial proving ground for state-level civic claims.
+Create an adversarial proving ground for state-level civic claims and American citizen recursive protection from AI-generated authority.
 
 Every claim must survive nine distinct layers. No layer may impersonate another.
+
+AI may assist. AI may not become the authority.
+
+## Citizen recursive protection
+
+American citizens should not be governed, denied, labeled, scored, charged, or publicly described by an AI-generated claim that cannot be traced, challenged, replayed, or corrected.
+
+Core protections:
+
+```json
+{
+  "citizen_rights": [
+    "human_readable_explanation",
+    "machine_readable_receipt",
+    "source_traceability",
+    "version_history",
+    "appeal_path",
+    "correction_path",
+    "independent_replay_when_feasible"
+  ]
+}
+```
+
+Core rule:
+
+```text
+citizen rights > model confidence
+receipts > narrative
+appeal > automation
+public evidence > black-box authority
+```
+
+Doctrine file:
+
+```text
+docs/AMERICAN_CITIZEN_RECURSIVE_PROTECTION.md
+```
 
 ## The 9 layers
 
@@ -90,6 +127,26 @@ This proves integrity of the captured source snapshot.
 It does not yet prove the complete Minnesota budget fact against full official MMB raw source bytes.
 ```
 
+## AI model failure doctrine
+
+External AI systems are stress nodes, not authorities.
+
+Doctrine file:
+
+```text
+docs/RECURSIVE_PRACTICES_AND_MODEL_FAILURES.md
+```
+
+Rules:
+
+- AI may propose.
+- Repo must verify.
+- Hashes must come from bytes.
+- Replay must test stored artifacts.
+- Model confidence is not proof.
+- Model outages become audit evidence.
+- No external model may promote a claim to `VERIFIED`.
+
 ## Hard rules
 
 - No fake verification.
@@ -99,14 +156,16 @@ It does not yet prove the complete Minnesota budget fact against full official M
 - State roots require replayable receipts.
 - National roots require explicit state status labels.
 - Public explanations must not soften failed or indeterminate verdicts.
+- Civic AI claims require appeal, traceability, and correction paths.
 - Humor is allowed; fake verification is forbidden.
 
 ## Next recommended upgrades
 
 1. Freeze full official MMB artifact bytes: PDF, HTML dump, or extracted official table.
-2. Add a second MN claim to test multi-claim state roots.
+2. Finish second MN claim hash + replay to test multi-claim state roots.
 3. Generate or verify national root only after explicit state statuses exist.
-4. Add Base / ENS / EAS anchor only after wallet or chain receipt exists.
+4. Add citizen verification interface for public claim checking.
+5. Add Base / ENS / EAS anchor only after wallet or chain receipt exists.
 
 ## Status
 
