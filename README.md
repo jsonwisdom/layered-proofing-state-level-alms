@@ -50,6 +50,62 @@ Doctrine file:
 docs/AMERICAN_CITIZEN_RECURSIVE_PROTECTION.md
 ```
 
+## Multi-state / multi-pass model
+
+State Level ALMS is now designed as a multi-state, multi-pass verification network.
+
+```json
+{
+  "multi_state": true,
+  "multi_pass": true,
+  "state_lanes": ["MN", "AL", "later_50_states_plus_DC"],
+  "passes": [
+    "intake_pass",
+    "source_freeze_pass",
+    "hash_pass",
+    "replay_pass",
+    "state_root_pass",
+    "public_explanation_pass",
+    "national_root_pass",
+    "external_anchor_pass"
+  ]
+}
+```
+
+Each pass must preserve exact state labels. A claim may pass replay while remaining `INDETERMINATE` if source completeness is partial.
+
+## Operation Lilu
+
+Operation Lilu is the public identity and culture layer for multi-state ALMS.
+
+Purpose:
+
+```json
+{
+  "operation": "Lilu",
+  "theme": "The 5th Element",
+  "role": "turn civic proof into public artifacts without fake verification",
+  "distribution_layer": "Zora identities",
+  "identity_rule": "Zora distributes; ALMS verifies"
+}
+```
+
+Operation Lilu connects:
+
+- state-level claim receipts,
+- public explanations,
+- citizen protection doctrine,
+- Zora identity artifacts,
+- jaywisdom.base public identity,
+- jaywisdom.eth research anchor.
+
+Hard boundary:
+
+```text
+A Zora identity or artifact is not proof by itself.
+Proof requires ALMS receipt, replay, root, or external anchor.
+```
+
 ## The 9 layers
 
 1. Claim — what is being asserted
@@ -147,6 +203,34 @@ Rules:
 - Model outages become audit evidence.
 - No external model may promote a claim to `VERIFIED`.
 
+## Zora identity boundary
+
+Zora identities can publish learning cards, Meme Court cases, state-lane artifacts, and public explanation cards.
+
+Allowed labels:
+
+```json
+[
+  "RESEARCH_IN_PROGRESS",
+  "SNAPSHOT_REPLAYED",
+  "STATE_ROOT_READY",
+  "PUBLIC_EXPLANATION_BOUND",
+  "ANCHOR_PENDING"
+]
+```
+
+Blocked labels unless receipts exist:
+
+```json
+[
+  "VERIFIED",
+  "OFFICIAL",
+  "ANCHored_ON_BASE",
+  "ENS_COMPLETE",
+  "CONTRACT_CONFIRMED"
+]
+```
+
 ## Hard rules
 
 - No fake verification.
@@ -157,15 +241,18 @@ Rules:
 - National roots require explicit state status labels.
 - Public explanations must not soften failed or indeterminate verdicts.
 - Civic AI claims require appeal, traceability, and correction paths.
+- Zora artifacts may distribute proof cards, but cannot replace proof.
 - Humor is allowed; fake verification is forbidden.
 
 ## Next recommended upgrades
 
 1. Freeze full official MMB artifact bytes: PDF, HTML dump, or extracted official table.
 2. Finish second MN claim hash + replay to test multi-claim state roots.
-3. Generate or verify national root only after explicit state statuses exist.
-4. Add citizen verification interface for public claim checking.
-5. Add Base / ENS / EAS anchor only after wallet or chain receipt exists.
+3. Add Alabama as first speed-lane comparison for multi-state root testing.
+4. Generate or verify national root only after explicit state statuses exist.
+5. Add citizen verification interface for public claim checking.
+6. Prepare Operation Lilu Zora identity cards with `ANCHOR_PENDING` labels only.
+7. Add Base / ENS / EAS anchor only after wallet or chain receipt exists.
 
 ## Status
 
