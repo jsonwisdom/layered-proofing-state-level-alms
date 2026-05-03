@@ -1,0 +1,35 @@
+{
+  "artifact": "GITHUB_ONLY_ANCHOR_RECEIPT",
+  "epoch": "GROK_EPOCH_001",
+  "operator": "Jay Wisdom",
+  "public_identity": "jaywisdom.base",
+  "research_anchor": "jaywisdom.eth",
+  "anchor_mode": "GITHUB_ONLY",
+  "status": "COMMITTED",
+  "public_label": "GITHUB_ANCHORED_ONLY",
+  "onchain_status": "NOT_REGISTERED",
+  "manual_registration_required": false,
+  "reason": "Operator chose to keep the current anchor layer on GitHub and avoid manual Base/EAS registration at this stage.",
+  "github_artifacts": [
+    "alms/anchors/base_eas_national_root_intent_2026-05-03.json",
+    "alms/anchors/base_eas_payload_draft_2026-05-03.json",
+    "docs/NATIONAL_ROOT_DESIGN.md",
+    "site/reputation-aware-verifier.html"
+  ],
+  "allowed_claims": [
+    "GitHub anchor receipt recorded",
+    "Base/EAS payload prepared but unsigned",
+    "National root anchoring deferred",
+    "No manual EAS registration performed"
+  ],
+  "blocked_claims": [
+    "ANCHORED_ON_BASE",
+    "EAS_ATTESTED",
+    "ENS_COMPLETE",
+    "VERIFIED_NATIONAL_ROOT",
+    "ONCHAIN_CONFIRMED"
+  ],
+  "boundary": "This receipt records GitHub-level anchoring only. It is not a Base/EAS transaction, not an ENS record, and not an on-chain attestation.",
+  "next_valid_onchain_step": "Only upgrade to Base/EAS anchored after wallet-signed transaction receipt exists.",
+  "created_utc": "2026-05-03T00:00:00Z"
+}
