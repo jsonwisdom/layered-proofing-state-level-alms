@@ -1,0 +1,46 @@
+{
+  "artifact": "NATIONAL_ROOT_ANCHOR_INTENT",
+  "epoch": "GROK_EPOCH_001",
+  "operator": "Jay Wisdom",
+  "public_identity": "jaywisdom.base",
+  "research_anchor": "jaywisdom.eth",
+  "network": "base",
+  "chain_id": 8453,
+  "anchor_system": "EAS",
+  "status": "UNSIGNED",
+  "public_label": "ANCHOR_PENDING",
+  "verdict": "INDETERMINATE",
+  "reason": "National root UI exists, but AL remains INDETERMINATE; no wallet-signed Base/EAS receipt exists yet.",
+  "national_root": "PENDING_BROWSER_OUTPUT",
+  "national_root_status": "INDETERMINATE",
+  "blocking_states": [
+    {
+      "state": "AL",
+      "status": "INDETERMINATE",
+      "reason": "AL lane is bootstrap only; official source capture/hash/replay not complete."
+    }
+  ],
+  "allowed_claims": [
+    "Anchor intent prepared",
+    "Base/EAS anchor pending",
+    "National root not yet externally anchored"
+  ],
+  "blocked_claims": [
+    "ANCHORED_ON_BASE",
+    "EAS_ATTESTED",
+    "ENS_COMPLETE",
+    "VERIFIED_NATIONAL_ROOT",
+    "CONTRACT_CONFIRMED"
+  ],
+  "required_evidence_for_anchor_complete": {
+    "wallet_signed_transaction": true,
+    "base_tx_hash": "REQUIRED",
+    "eas_uid": "REQUIRED_IF_EAS_ATTESTATION_USED",
+    "block_number": "REQUIRED",
+    "attester_address": "REQUIRED",
+    "schema_uid": "REQUIRED_IF_EAS_ATTESTATION_USED"
+  },
+  "rule": "Do not claim anchored until wallet-signed Base/EAS receipt exists.",
+  "boundary": "GitHub intent is not a Base anchor. A Base tx hash or EAS UID is required as external evidence.",
+  "created_utc": "2026-05-03T00:00:00Z"
+}
