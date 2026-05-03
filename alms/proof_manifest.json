@@ -1,6 +1,7 @@
 {
   "manifest_version": "0.1",
   "epoch": "GROK_EPOCH_001",
+  "timestamp": "2026-05-03T19:50:00Z",
   "lanes": [
     {
       "lane_id": "MN-budget-proof",
@@ -46,7 +47,24 @@
     "http_source_only": true,
     "default_verdict": "INDETERMINATE"
   },
-  "claims": [],
+  "claims": [
+    {
+      "claim_id": "MN-BUDGET-2026-01",
+      "state": "MN",
+      "path": "fixtures/mn/mn_budget_2026_claim.json",
+      "status": "INDETERMINATE",
+      "layers_completed": ["CLAIM", "SOURCE", "FROZEN_ARTIFACT"],
+      "layers_pending": ["HASH", "RECEIPT", "REPLAY", "STATE_ROOT", "NATIONAL_ROOT", "PUBLIC_EXPLANATION"],
+      "notes": "Intake registered. Pending hash computation and replay."
+    }
+  ],
+  "claim_sets": {
+    "MN": {
+      "total_claims": 1,
+      "snapshot_hash": "UNSET_PENDING_HASH",
+      "completeness": "INCOMPLETE"
+    }
+  },
   "receipts": [],
   "state_roots": [],
   "national_roots": []
