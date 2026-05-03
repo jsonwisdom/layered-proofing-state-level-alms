@@ -1,0 +1,6 @@
+{
+  "states": [
+    { "state": "AL", "status": "BOOTSTRAP" },
+    { "state": "MN", "status": "BOOTSTRAP" }
+  ]
+}
