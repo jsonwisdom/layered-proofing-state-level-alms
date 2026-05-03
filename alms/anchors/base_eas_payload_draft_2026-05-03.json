@@ -1,0 +1,49 @@
+{
+  "artifact": "BASE_EAS_PAYLOAD_DRAFT",
+  "epoch": "GROK_EPOCH_001",
+  "operator": "Jay Wisdom",
+  "public_identity": "jaywisdom.base",
+  "research_anchor": "jaywisdom.eth",
+  "network": "base",
+  "chain_id": 8453,
+  "anchor_system": "EAS",
+  "status": "DRAFT_UNSIGNED",
+  "public_label": "ANCHOR_PENDING",
+  "payload_type": "NATIONAL_ROOT_STATUS_ATTESTATION",
+  "payload": {
+    "artifact": "NATIONAL_ROOT",
+    "version": "US_SNAPSHOT_2026-05-03",
+    "root": "PASTE_BROWSER_NATIONAL_ROOT_HERE",
+    "states": [
+      {
+        "state": "MN",
+        "status": "PASS",
+        "root": "PASTE_BROWSER_MN_ROOT_HERE",
+        "version": "MN_SNAPSHOT_2026-05-03"
+      },
+      {
+        "state": "AL",
+        "status": "INDETERMINATE",
+        "root": null,
+        "version": "AL_BOOTSTRAP_2026-05-03"
+      }
+    ],
+    "verdict": "INDETERMINATE",
+    "note": "Snapshot-level aggregation. AL incomplete. Not full national verification. This attestation anchors system state, not verified national truth."
+  },
+  "blocked_claims_until_receipt": [
+    "ANCHORED_ON_BASE",
+    "EAS_ATTESTED",
+    "ENS_COMPLETE",
+    "VERIFIED_NATIONAL_ROOT"
+  ],
+  "required_receipt_fields_after_signing": [
+    "base_tx_hash",
+    "eas_uid",
+    "block_number",
+    "attester_address",
+    "schema_uid"
+  ],
+  "rule": "Anchor only the honest INDETERMINATE national state unless all state roots are PASS.",
+  "created_utc": "2026-05-03T00:00:00Z"
+}
