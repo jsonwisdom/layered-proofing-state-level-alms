@@ -1,6 +1,14 @@
 {
   "states": [
-    { "state": "AL", "status": "BOOTSTRAP" },
-    { "state": "MN", "status": "BOOTSTRAP" }
+    {
+      "state": "AL",
+      "status": "BOOTSTRAP",
+      "root_path": "alms/roots/AL-state-root.json"
+    },
+    {
+      "state": "MN",
+      "status": "BOOTSTRAP",
+      "root_path": "alms/roots/MN-state-root.json"
+    }
   ]
 }
