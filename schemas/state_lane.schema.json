@@ -1,0 +1,16 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "State Lane",
+  "type": "object",
+  "required": ["lane_id", "state", "layers"],
+  "properties": {
+    "layer": { "const": "LANE" },
+    "lane_id": { "type": "string" },
+    "state": { "type": "string" },
+    "layers": {
+      "type": "array",
+      "items": { "type": "string" }
+    }
+  },
+  "additionalProperties": false
+}
