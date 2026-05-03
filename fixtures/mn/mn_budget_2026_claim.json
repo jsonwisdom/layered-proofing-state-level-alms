@@ -11,19 +11,19 @@
   },
   "frozen_artifact": {
     "mode": "repo",
-    "reference": "fixtures/mn/mn_budget_2026_claim.json",
+    "reference": "fixtures/mn/sources/mmb_budget_snapshot_2026-05-03.txt",
     "capture_date": "2026-05-03"
   },
-  "hash": "UNSET_PENDING_COMMIT",
+  "hash": "sha256:e4d56ee0d5136c8bd45f9b93ba1cb16098a6626710889a45a744b184d9040b0f",
   "receipt": {
     "receipt_id": "MN-BUDGET-RECEIPT-001",
     "status": "INDETERMINATE",
-    "notes": "Source URL present. Frozen artifact reference set to repo path. Awaiting commit, hash computation, and successful replay before any VERIFIED status.",
+    "notes": "Frozen source snapshot bytes committed and hashed. Awaiting full replay validation before VERIFIED status.",
     "replay_passed": false
   },
   "replay": {
     "status": "PENDING",
-    "notes": "Replay not yet executed on committed bytes"
+    "notes": "Ready for replay execution against frozen source snapshot"
   },
   "state_root": {
     "status": "PENDING"
@@ -33,7 +33,7 @@
   },
   "public_explanation": {
     "status": "PENDING",
-    "content_summary": "Verification pending. Claim intake only. No frozen artifact hash or replay completed. Status INDETERMINATE until full layered proofing completes.",
+    "content_summary": "Artifact frozen and hashed. Full verification pending successful replay and root computation. Current status: INDETERMINATE.",
     "explanation_hash": "UNSET"
   }
 }
