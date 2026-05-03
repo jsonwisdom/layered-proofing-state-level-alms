@@ -25,7 +25,7 @@
   <section>
     <p class="small">jaywisdom.base · research anchor jaywisdom.eth · ALMS / Reputation Layer</p>
     <h1>Reputation-Aware Verifier</h1>
-    <p>This page classifies a claim by domain, proof status, and safety boundary. It can also fetch public repo receipt/source files and compare SHA-256 hashes in the browser.</p>
+    <p>This page classifies a claim by domain, proof status, and safety boundary. It can fetch public repo receipt/source files and compare SHA-256 hashes in the browser.</p>
     <span class="pill warn">Model output is not proof</span>
     <span class="pill ok">Receipts decide</span>
     <span class="pill bad">Private data blocked</span>
@@ -46,6 +46,7 @@
     <button onclick="verifyClaim()">Verify boundaries</button>
     <button onclick="verifyWithReceipt()">Fetch receipt + hash source</button>
     <button onclick="loadExample()">Load example</button>
+    <button onclick="verifyMNMultiClaim()">Verify MN multi-claim set</button>
   </section>
 
   <section>
@@ -58,6 +59,12 @@
     <h2>Receipt connection</h2>
     <p class="small">For repo paths, the verifier fetches raw GitHub files from <code>jsonwisdom/layered-proofing-state-level-alms/main</code>, computes SHA-256 locally using Web Crypto, and compares it to <code>expected_hash</code> or the claim wrapper hash.</p>
     <pre id="receiptOutput">No receipt fetch yet.</pre>
+  </section>
+
+  <section>
+    <h2>MN multi-claim verification</h2>
+    <p class="small">Checks the two current MN source snapshots and claim wrappers. This verifies stored source bytes only; it does not prove full official MMB completeness.</p>
+    <pre id="multiOutput">No multi-claim run yet.</pre>
   </section>
 
   <section>
@@ -77,6 +84,10 @@ const RAW_BASE = "https://raw.githubusercontent.com/jsonwisdom/layered-proofing-
 const allowedDomains = ["personal","business","private","family","alms"];
 const allowedStatuses = ["SUGGESTION","UNVERIFIED_CLAIM","RECEIPT_BACKED","REPLAYED","ROOTED","ANCHORED"];
 const blockedPublicLabels = ["VERIFIED","OFFICIAL","CERTIFIED","ONCHAIN_CONFIRMED","ENS_COMPLETE","CONTRACT_CONFIRMED"];
+const mnClaims = [
+  { id:"MN-BUDGET-2026-01", claim:"fixtures/mn/mn_budget_2026_claim.json", source:"fixtures/mn/sources/mmb_budget_snapshot_2026-05-03.txt", expected:"sha256:e4d56ee0d5136c8bd45f9b93ba1cb16098a6626710889a45a744b184d9040b0f" },
+  { id:"MN-BUDGET-RESERVE-2026-01", claim:"fixtures/mn/mn_budget_reserve_2026_claim.json", source:"fixtures/mn/sources/mmb_budget_reserve_snapshot_2026-05-03.txt", expected:null }
+];
 function badge(text, cls){ return `<span class="pill ${cls}">${text}</span>`; }
 function rawUrl(path){ if(/^https?:\/\//.test(path)) return path; return RAW_BASE + path.replace(/^\.\//,''); }
 async function sha256Text(text){ const enc = new TextEncoder(); const buf = await crypto.subtle.digest('SHA-256', enc.encode(text)); return 'sha256:' + [...new Uint8Array(buf)].map(b=>b.toString(16).padStart(2,'0')).join(''); }
@@ -121,19 +132,28 @@ async function verifyWithReceipt(){
     }
     const hash_match = !!expected && computed === expected;
     const verdict = hash_match ? 'PASS' : 'FAIL';
-    receiptOut.textContent = JSON.stringify({
-      verdict,
-      source: obj.source,
-      receipt_path: obj.receipt_path || 'UNSET',
-      expected_hash: expected || 'UNSET',
-      computed_hash: computed,
-      hash_match,
-      receipt_status: receipt && receipt.receipt ? receipt.receipt.status : (receipt && receipt.status ? receipt.status : 'UNKNOWN'),
-      boundary: 'This verifies stored source bytes against expected hash. It does not prove full source completeness.'
-    }, null, 2);
-  } catch(err){
-    receiptOut.textContent = JSON.stringify({verdict:'INDETERMINATE', reason:String(err)}, null, 2);
+    receiptOut.textContent = JSON.stringify({verdict, source: obj.source, receipt_path: obj.receipt_path || 'UNSET', expected_hash: expected || 'UNSET', computed_hash: computed, hash_match, receipt_status: receipt && receipt.receipt ? receipt.receipt.status : (receipt && receipt.status ? receipt.status : 'UNKNOWN'), boundary: 'This verifies stored source bytes against expected hash. It does not prove full source completeness.'}, null, 2);
+  } catch(err){ receiptOut.textContent = JSON.stringify({verdict:'INDETERMINATE', reason:String(err)}, null, 2); }
+}
+async function verifyMNMultiClaim(){
+  const out = document.getElementById('multiOutput');
+  out.textContent = 'Running MN multi-claim verification...';
+  const results = [];
+  for(const c of mnClaims){
+    try {
+      const sourceText = await fetchText(c.source);
+      const computed = await sha256Text(sourceText);
+      const claimText = await fetchText(c.claim);
+      const claim = JSON.parse(claimText);
+      const expected = c.expected || claim.hash;
+      const hash_match = !!expected && expected.startsWith('sha256:') && computed === expected;
+      results.push({ id:c.id, source:c.source, claim:c.claim, expected_hash:expected || 'UNSET', computed_hash:computed, hash_match, claim_status: claim.receipt && claim.receipt.status ? claim.receipt.status : 'UNKNOWN', boundary:'snapshot-level only' });
+    } catch(err){ results.push({ id:c.id, verdict:'INDETERMINATE', reason:String(err) }); }
   }
+  const allMatched = results.every(r => r.hash_match === true);
+  const missing = results.filter(r => !r.hash_match);
+  const verdict = allMatched ? 'PASS' : 'INDETERMINATE';
+  out.textContent = JSON.stringify({ verdict, claim_count: results.length, matched_count: results.filter(r=>r.hash_match).length, results, multi_claim_boundary:'PASS here means source snapshot bytes match expected hashes. It does not mean full MMB truth or national root is verified.', next_action: missing.length ? 'Compute and bind missing claim hashes, then rerun.' : 'Update manifest and compute MN state root.' }, null, 2);
 }
 function loadExample(){
   document.getElementById('input').value = JSON.stringify({claim:"MN budget snapshot replay passed at snapshot level.", domain:"alms", source:"fixtures/mn/sources/mmb_budget_snapshot_2026-05-03.txt", expected_hash:"sha256:e4d56ee0d5136c8bd45f9b93ba1cb16098a6626710889a45a744b184d9040b0f", receipt_path:"fixtures/mn/mn_budget_2026_claim.json", status:"REPLAYED", correction_path:"https://github.com/jsonwisdom/layered-proofing-state-level-alms/issues"}, null, 2);
