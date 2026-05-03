@@ -1,0 +1,15 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "State Claim",
+  "type": "object",
+  "required": ["claim_id", "state", "claim_text", "timestamp", "layer"],
+  "properties": {
+    "layer": { "const": "CLAIM" },
+    "claim_id": { "type": "string" },
+    "state": { "type": "string" },
+    "claim_text": { "type": "string" },
+    "timestamp": { "type": "string" },
+    "source_url": { "type": "string" }
+  },
+  "additionalProperties": false
+}
