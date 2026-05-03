@@ -1,0 +1,13 @@
+{
+  "layer": "CLAIM",
+  "claim_id": "MN-0002",
+  "state": "MN",
+  "claim_text": "Replay test with mismatched hash",
+  "timestamp": "2026-05-03T00:00:00Z",
+  "source_url": "https://example.com/source",
+  "frozen_artifact": {
+    "mode": "repo",
+    "reference": "README.md"
+  },
+  "hash": "sha256:0000000000000000000000000000000000000000000000000000000000000000"
+}
