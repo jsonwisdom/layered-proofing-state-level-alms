@@ -25,7 +25,7 @@
   <section>
     <p class="small">jaywisdom.base · research anchor jaywisdom.eth · ALMS / Reputation Layer</p>
     <h1>Reputation-Aware Verifier</h1>
-    <p>This page classifies a claim by domain, proof status, and safety boundary. It can fetch public repo receipt/source files and compare SHA-256 hashes in the browser.</p>
+    <p>This page classifies a claim by domain, proof status, and safety boundary. It can fetch public repo receipt/source files, compare SHA-256 hashes, and compute a browser-side MN Merkle root.</p>
     <span class="pill warn">Model output is not proof</span>
     <span class="pill ok">Receipts decide</span>
     <span class="pill bad">Private data blocked</span>
@@ -47,35 +47,17 @@
     <button onclick="verifyWithReceipt()">Fetch receipt + hash source</button>
     <button onclick="loadExample()">Load example</button>
     <button onclick="verifyMNMultiClaim()">Verify MN multi-claim set</button>
+    <button onclick="computeMNRootFromUI()">Compute MN root from UI</button>
   </section>
 
-  <section>
-    <h2>Verdict</h2>
-    <div id="badges"></div>
-    <pre id="output">Waiting for input...</pre>
-  </section>
-
-  <section>
-    <h2>Receipt connection</h2>
-    <p class="small">For repo paths, the verifier fetches raw GitHub files from <code>jsonwisdom/layered-proofing-state-level-alms/main</code>, computes SHA-256 locally using Web Crypto, and compares it to <code>expected_hash</code> or the claim wrapper hash.</p>
-    <pre id="receiptOutput">No receipt fetch yet.</pre>
-  </section>
-
-  <section>
-    <h2>MN multi-claim verification</h2>
-    <p class="small">Checks the two current MN source snapshots and claim wrappers. This verifies stored source bytes only; it does not prove full official MMB completeness.</p>
-    <pre id="multiOutput">No multi-claim run yet.</pre>
-  </section>
+  <section><h2>Verdict</h2><div id="badges"></div><pre id="output">Waiting for input...</pre></section>
+  <section><h2>Receipt connection</h2><p class="small">For repo paths, the verifier fetches raw GitHub files from <code>jsonwisdom/layered-proofing-state-level-alms/main</code>, computes SHA-256 locally using Web Crypto, and compares it to <code>expected_hash</code> or the claim wrapper hash.</p><pre id="receiptOutput">No receipt fetch yet.</pre></section>
+  <section><h2>MN multi-claim verification</h2><p class="small">Checks the two current MN source snapshots and claim wrappers. This verifies stored source bytes only; it does not prove full official MMB completeness.</p><pre id="multiOutput">No multi-claim run yet.</pre></section>
+  <section><h2>MN root computation</h2><p class="small">Computes a client-side Merkle root from matching MN source snapshot hashes. If any claim hash is missing or mismatched, root status remains INDETERMINATE.</p><pre id="rootOutput">No root computation yet.</pre></section>
 
   <section>
     <h2>Rules</h2>
-    <ul>
-      <li>Personal voice is not ALMS authority.</li>
-      <li>Business claims need evidence when factual.</li>
-      <li>Private and family material are blocked unless explicitly safe.</li>
-      <li>ALMS statuses require source, receipt/replay/root, and correction path.</li>
-      <li>Zora distributes identity artifacts; ALMS verifies claims.</li>
-    </ul>
+    <ul><li>Personal voice is not ALMS authority.</li><li>Business claims need evidence when factual.</li><li>Private and family material are blocked unless explicitly safe.</li><li>ALMS statuses require source, receipt/replay/root, and correction path.</li><li>Zora distributes identity artifacts; ALMS verifies claims.</li></ul>
     <p class="small">Doctrine: <a href="../docs/JAYS_REPUTATION_LAYER.md">Jay's Reputation Layer</a> · <a href="../docs/AMERICAN_CITIZEN_RECURSIVE_PROTECTION.md">Citizen Recursive Protection</a></p>
   </section>
 </main>
@@ -90,75 +72,19 @@ const mnClaims = [
 ];
 function badge(text, cls){ return `<span class="pill ${cls}">${text}</span>`; }
 function rawUrl(path){ if(/^https?:\/\//.test(path)) return path; return RAW_BASE + path.replace(/^\.\//,''); }
-async function sha256Text(text){ const enc = new TextEncoder(); const buf = await crypto.subtle.digest('SHA-256', enc.encode(text)); return 'sha256:' + [...new Uint8Array(buf)].map(b=>b.toString(16).padStart(2,'0')).join(''); }
+function hexToBytes(hex){ const clean = hex.replace(/^sha256:/,''); const out = new Uint8Array(clean.length/2); for(let i=0;i<out.length;i++) out[i]=parseInt(clean.substr(i*2,2),16); return out; }
+function bytesToHex(bytes){ return [...bytes].map(b=>b.toString(16).padStart(2,'0')).join(''); }
+async function sha256Bytes(bytes){ const buf = await crypto.subtle.digest('SHA-256', bytes); return new Uint8Array(buf); }
+async function sha256Text(text){ const enc = new TextEncoder(); return 'sha256:' + bytesToHex(await sha256Bytes(enc.encode(text))); }
+async function sha256ConcatHex(left, right){ const a = hexToBytes(left), b = hexToBytes(right); const joined = new Uint8Array(a.length + b.length); joined.set(a); joined.set(b, a.length); return 'sha256:' + bytesToHex(await sha256Bytes(joined)); }
+async function merkleRoot(leaves){ if(!leaves.length) return await sha256Text(''); let level = [...leaves].sort(); while(level.length > 1){ const nxt=[]; for(let i=0;i<level.length;i+=2){ const left=level[i]; const right=level[i+1] || left; nxt.push(await sha256ConcatHex(left, right)); } level=nxt; } return level[0]; }
 async function fetchText(path){ const res = await fetch(rawUrl(path), {cache:'no-store'}); if(!res.ok) throw new Error(`fetch failed ${res.status}: ${path}`); return await res.text(); }
 function readInput(){ return JSON.parse(document.getElementById('input').value); }
-function verifyClaim(){
-  const out = document.getElementById('output');
-  const badges = document.getElementById('badges');
-  let obj;
-  try { obj = readInput(); }
-  catch(e){ out.textContent = JSON.stringify({verdict:"FAIL", reason:"invalid JSON"}, null, 2); badges.innerHTML = badge('FAIL','bad'); return null; }
-  const findings = [];
-  const domain = obj.domain;
-  const status = obj.status;
-  if(!allowedDomains.includes(domain)) findings.push({id:"DOMAIN", status:"FAIL", reason:"unknown domain"});
-  if(!allowedStatuses.includes(status)) findings.push({id:"STATUS", status:"FAIL", reason:"unknown or blocked status"});
-  if(blockedPublicLabels.includes(status)) findings.push({id:"BLOCKED_LABEL", status:"FAIL", reason:"public proof label requires receipts/anchors"});
-  if(domain === "private") findings.push({id:"PRIVATE", status:"BLOCKED", reason:"private domain is not public proof"});
-  if(domain === "family" && !obj.family_safe) findings.push({id:"FAMILY_REVIEW", status:"INDETERMINATE", reason:"family artifact requires safety review"});
-  if(["RECEIPT_BACKED","REPLAYED","ROOTED","ANCHORED"].includes(status) && (!obj.source || !obj.correction_path)) findings.push({id:"TRACEABILITY", status:"FAIL", reason:"source and correction_path required"});
-  if(status === "ANCHORED" && !obj.anchor_receipt) findings.push({id:"ANCHOR", status:"FAIL", reason:"ANCHored claim requires anchor_receipt"});
-  const verdict = findings.some(f=>f.status==="FAIL"||f.status==="BLOCKED") ? "FAIL" : (findings.length ? "INDETERMINATE" : "PASS");
-  badges.innerHTML = badge(verdict, verdict==="PASS"?'ok':verdict==="FAIL"?'bad':'warn') + badge(domain || 'NO_DOMAIN','warn') + badge(status || 'NO_STATUS','warn');
-  out.textContent = JSON.stringify({verdict, domain, status, findings, rule:"ALMS verifies artifacts, not human worth."}, null, 2);
-  return {obj, verdict, findings};
-}
-async function verifyWithReceipt(){
-  const receiptOut = document.getElementById('receiptOutput');
-  const base = verifyClaim();
-  if(!base){ return; }
-  const obj = base.obj;
-  try {
-    if(!obj.source) throw new Error('missing source');
-    const sourceText = await fetchText(obj.source);
-    const computed = await sha256Text(sourceText);
-    let expected = obj.expected_hash;
-    let receipt = null;
-    if(obj.receipt_path && obj.receipt_path !== 'UNSET'){
-      const receiptText = await fetchText(obj.receipt_path);
-      try { receipt = JSON.parse(receiptText); } catch(e) { receipt = {raw_receipt_text: receiptText.slice(0, 500)}; }
-      if(!expected && receipt && receipt.hash) expected = receipt.hash;
-    }
-    const hash_match = !!expected && computed === expected;
-    const verdict = hash_match ? 'PASS' : 'FAIL';
-    receiptOut.textContent = JSON.stringify({verdict, source: obj.source, receipt_path: obj.receipt_path || 'UNSET', expected_hash: expected || 'UNSET', computed_hash: computed, hash_match, receipt_status: receipt && receipt.receipt ? receipt.receipt.status : (receipt && receipt.status ? receipt.status : 'UNKNOWN'), boundary: 'This verifies stored source bytes against expected hash. It does not prove full source completeness.'}, null, 2);
-  } catch(err){ receiptOut.textContent = JSON.stringify({verdict:'INDETERMINATE', reason:String(err)}, null, 2); }
-}
-async function verifyMNMultiClaim(){
-  const out = document.getElementById('multiOutput');
-  out.textContent = 'Running MN multi-claim verification...';
-  const results = [];
-  for(const c of mnClaims){
-    try {
-      const sourceText = await fetchText(c.source);
-      const computed = await sha256Text(sourceText);
-      const claimText = await fetchText(c.claim);
-      const claim = JSON.parse(claimText);
-      const expected = c.expected || claim.hash;
-      const hash_match = !!expected && expected.startsWith('sha256:') && computed === expected;
-      results.push({ id:c.id, source:c.source, claim:c.claim, expected_hash:expected || 'UNSET', computed_hash:computed, hash_match, claim_status: claim.receipt && claim.receipt.status ? claim.receipt.status : 'UNKNOWN', boundary:'snapshot-level only' });
-    } catch(err){ results.push({ id:c.id, verdict:'INDETERMINATE', reason:String(err) }); }
-  }
-  const allMatched = results.every(r => r.hash_match === true);
-  const missing = results.filter(r => !r.hash_match);
-  const verdict = allMatched ? 'PASS' : 'INDETERMINATE';
-  out.textContent = JSON.stringify({ verdict, claim_count: results.length, matched_count: results.filter(r=>r.hash_match).length, results, multi_claim_boundary:'PASS here means source snapshot bytes match expected hashes. It does not mean full MMB truth or national root is verified.', next_action: missing.length ? 'Compute and bind missing claim hashes, then rerun.' : 'Update manifest and compute MN state root.' }, null, 2);
-}
-function loadExample(){
-  document.getElementById('input').value = JSON.stringify({claim:"MN budget snapshot replay passed at snapshot level.", domain:"alms", source:"fixtures/mn/sources/mmb_budget_snapshot_2026-05-03.txt", expected_hash:"sha256:e4d56ee0d5136c8bd45f9b93ba1cb16098a6626710889a45a744b184d9040b0f", receipt_path:"fixtures/mn/mn_budget_2026_claim.json", status:"REPLAYED", correction_path:"https://github.com/jsonwisdom/layered-proofing-state-level-alms/issues"}, null, 2);
-  verifyClaim();
-}
+function verifyClaim(){ const out=document.getElementById('output'), badges=document.getElementById('badges'); let obj; try{obj=readInput();}catch(e){out.textContent=JSON.stringify({verdict:"FAIL",reason:"invalid JSON"},null,2);badges.innerHTML=badge('FAIL','bad');return null;} const findings=[]; const domain=obj.domain,status=obj.status; if(!allowedDomains.includes(domain))findings.push({id:"DOMAIN",status:"FAIL",reason:"unknown domain"}); if(!allowedStatuses.includes(status))findings.push({id:"STATUS",status:"FAIL",reason:"unknown or blocked status"}); if(blockedPublicLabels.includes(status))findings.push({id:"BLOCKED_LABEL",status:"FAIL",reason:"public proof label requires receipts/anchors"}); if(domain==="private")findings.push({id:"PRIVATE",status:"BLOCKED",reason:"private domain is not public proof"}); if(domain==="family"&&!obj.family_safe)findings.push({id:"FAMILY_REVIEW",status:"INDETERMINATE",reason:"family artifact requires safety review"}); if(["RECEIPT_BACKED","REPLAYED","ROOTED","ANCHORED"].includes(status)&&(!obj.source||!obj.correction_path))findings.push({id:"TRACEABILITY",status:"FAIL",reason:"source and correction_path required"}); if(status==="ANCHORED"&&!obj.anchor_receipt)findings.push({id:"ANCHOR",status:"FAIL",reason:"ANCHored claim requires anchor_receipt"}); const verdict=findings.some(f=>f.status==="FAIL"||f.status==="BLOCKED")?"FAIL":(findings.length?"INDETERMINATE":"PASS"); badges.innerHTML=badge(verdict,verdict==="PASS"?'ok':verdict==="FAIL"?'bad':'warn')+badge(domain||'NO_DOMAIN','warn')+badge(status||'NO_STATUS','warn'); out.textContent=JSON.stringify({verdict,domain,status,findings,rule:"ALMS verifies artifacts, not human worth."},null,2); return {obj,verdict,findings}; }
+async function verifyWithReceipt(){ const receiptOut=document.getElementById('receiptOutput'); const base=verifyClaim(); if(!base)return; const obj=base.obj; try{ if(!obj.source)throw new Error('missing source'); const sourceText=await fetchText(obj.source); const computed=await sha256Text(sourceText); let expected=obj.expected_hash; let receipt=null; if(obj.receipt_path&&obj.receipt_path!=='UNSET'){ const receiptText=await fetchText(obj.receipt_path); try{receipt=JSON.parse(receiptText);}catch(e){receipt={raw_receipt_text:receiptText.slice(0,500)};} if(!expected&&receipt&&receipt.hash)expected=receipt.hash; } const hash_match=!!expected&&computed===expected; receiptOut.textContent=JSON.stringify({verdict:hash_match?'PASS':'FAIL',source:obj.source,receipt_path:obj.receipt_path||'UNSET',expected_hash:expected||'UNSET',computed_hash:computed,hash_match,receipt_status:receipt&&receipt.receipt?receipt.receipt.status:(receipt&&receipt.status?receipt.status:'UNKNOWN'),boundary:'This verifies stored source bytes against expected hash. It does not prove full source completeness.'},null,2);}catch(err){receiptOut.textContent=JSON.stringify({verdict:'INDETERMINATE',reason:String(err)},null,2);} }
+async function verifyMNMultiClaim(){ const out=document.getElementById('multiOutput'); out.textContent='Running MN multi-claim verification...'; const results=[]; for(const c of mnClaims){ try{ const sourceText=await fetchText(c.source); const computed=await sha256Text(sourceText); const claimText=await fetchText(c.claim); const claim=JSON.parse(claimText); const expected=c.expected||claim.hash; const hash_match=!!expected&&expected.startsWith('sha256:')&&computed===expected; results.push({id:c.id,source:c.source,claim:c.claim,expected_hash:expected||'UNSET',computed_hash:computed,hash_match,claim_status:claim.receipt&&claim.receipt.status?claim.receipt.status:'UNKNOWN',boundary:'snapshot-level only'});}catch(err){results.push({id:c.id,verdict:'INDETERMINATE',reason:String(err)});} } const allMatched=results.every(r=>r.hash_match===true); const missing=results.filter(r=>!r.hash_match); out.textContent=JSON.stringify({verdict:allMatched?'PASS':'INDETERMINATE',claim_count:results.length,matched_count:results.filter(r=>r.hash_match).length,results,multi_claim_boundary:'PASS here means source snapshot bytes match expected hashes. It does not mean full MMB truth or national root is verified.',next_action:missing.length?'Compute and bind missing claim hashes, then rerun.':'Compute MN root from UI.'},null,2); return {results, allMatched}; }
+async function computeMNRootFromUI(){ const out=document.getElementById('rootOutput'); out.textContent='Computing MN root from UI...'; const verification=await verifyMNMultiClaim(); const matched=verification.results.filter(r=>r.hash_match===true); if(!verification.allMatched){ out.textContent=JSON.stringify({verdict:'INDETERMINATE',reason:'not all MN claim source hashes match yet',claim_count:verification.results.length,matched_count:matched.length,blocking_claims:verification.results.filter(r=>!r.hash_match),boundary:'No state root is promoted until every declared claim hash matches.'},null,2); return; } const leaves=matched.map(r=>r.computed_hash); const root=await merkleRoot(leaves); out.textContent=JSON.stringify({verdict:'PASS',state:'MN',claim_count:matched.length,state_root:root,leaf_hashes:[...leaves].sort(),status:'SNAPSHOT_ROOT_COMPUTED',boundary:'This is a browser-computed root over stored source snapshot hashes only. It is not full official MMB completeness and not an external anchor.'},null,2); }
+function loadExample(){ document.getElementById('input').value=JSON.stringify({claim:"MN budget snapshot replay passed at snapshot level.",domain:"alms",source:"fixtures/mn/sources/mmb_budget_snapshot_2026-05-03.txt",expected_hash:"sha256:e4d56ee0d5136c8bd45f9b93ba1cb16098a6626710889a45a744b184d9040b0f",receipt_path:"fixtures/mn/mn_budget_2026_claim.json",status:"REPLAYED",correction_path:"https://github.com/jsonwisdom/layered-proofing-state-level-alms/issues"},null,2); verifyClaim(); }
 verifyClaim();
 </script>
 </body>
