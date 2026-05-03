@@ -1,0 +1,22 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "State Receipt",
+  "type": "object",
+  "required": ["receipt_id", "claim_id", "status", "layer"],
+  "properties": {
+    "layer": { "const": "RECEIPT" },
+    "receipt_id": { "type": "string" },
+    "claim_id": { "type": "string" },
+    "status": { "enum": ["VERIFIED", "INDETERMINATE", "FAILED"] },
+    "frozen_artifact": {
+      "type": "object",
+      "required": ["mode", "reference"],
+      "properties": {
+        "mode": { "enum": ["repo", "github_commit", "sha256"] },
+        "reference": { "type": "string" }
+      }
+    },
+    "hash": { "type": "string" }
+  },
+  "additionalProperties": false
+}
