@@ -14,11 +14,11 @@
     "reference": "fixtures/mn/sources/mmb_budget_reserve_snapshot_2026-05-03.txt",
     "capture_date": "2026-05-03"
   },
-  "hash": "UNSET_PENDING_COMMIT",
+  "hash": "sha256:3537811e3afd3e1baa5910e530c05c3f82b2d3322e27644d2f6a2847159f1a2c",
   "receipt": {
     "receipt_id": "MN-RESERVE-RECEIPT-001",
     "status": "INDETERMINATE",
-    "notes": "Source snapshot prepared. Awaiting commit, hash computation, and replay.",
+    "notes": "Frozen source snapshot hash bound. Snapshot-level replay may pass, but full source completeness remains unverified.",
     "replay_passed": false
   },
   "replay": {
@@ -32,7 +32,7 @@
   },
   "public_explanation": {
     "status": "PENDING",
-    "content_summary": "INDETERMINATE - Snapshot-level proof only. Awaiting full pipeline.",
+    "content_summary": "INDETERMINATE - Snapshot-level proof only. Awaiting replay and multi-claim root computation.",
     "explanation_hash": "UNSET"
   }
 }
