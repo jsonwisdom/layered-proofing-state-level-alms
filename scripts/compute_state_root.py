@@ -1,15 +1,12 @@
 #!/usr/bin/env python3
 """Compute deterministic state root for Layered Proofing.
 
-GROK_EPOCH_001 / ROOT-STRUCT-001 fix.
+GROK_EPOCH_001 / INTEGRITY-STRUCT-001 fix.
 
-Rule:
-- Input manifest: alms/proof_manifest.json
-- State argument: MN, AL, etc.
-- Select claims for that state from manifest.claims
-- Replay each claim through scripts/validate_claim.py --replay
-- Build Merkle root from sorted claim hashes
-- Write alms/roots/<STATE>-state-root.json
+Hard rules:
+- Any failed claim makes the state root FAILED.
+- Claim set must match declared completeness metadata when present.
+- Snapshot hash commits to sorted claim ids + states + paths.
 """
 
 from __future__ import annotations
@@ -48,6 +45,13 @@ def merkle_root(leaves: list[str]) -> str:
     return "sha256:" + level[0]
 
 
+def claim_set_snapshot_hash(claims: list[dict]) -> str:
+    rows = []
+    for claim in sorted(claims, key=lambda c: (c.get("claim_id", ""), c.get("path", ""))):
+        rows.append("|".join([claim.get("claim_id", ""), claim.get("state", ""), claim.get("path", "")]))
+    return "sha256:" + sha256_hex("\n".join(rows).encode("utf-8"))
+
+
 def replay_claim(claim_path: str) -> dict:
     cmd = [sys.executable, "scripts/validate_claim.py", "--replay", claim_path]
     proc = subprocess.run(cmd, cwd=ROOT, capture_output=True, text=True)
@@ -64,9 +68,24 @@ def main() -> int:
         print(json.dumps({"verdict": "FAIL", "reason": "usage: scripts/compute_state_root.py <STATE>"}, indent=2))
         return 1
 
-    state = sys.argv[1].upper()
+    state = sys.argv[1].upper().replace("--LANE", "")
     manifest = load_json(MANIFEST)
     claims = [c for c in manifest.get("claims", []) if c.get("state") == state]
+    declared_sets = manifest.get("claim_sets", {})
+    declared = declared_sets.get(state, {})
+
+    snapshot_hash = claim_set_snapshot_hash(claims)
+    set_violations = []
+
+    if declared:
+        if declared.get("completeness") != "DECLARED_EXHAUSTIVE":
+            set_violations.append("claim set completeness not DECLARED_EXHAUSTIVE")
+        if declared.get("total_claims") != len(claims):
+            set_violations.append(f"total_claims mismatch declared={declared.get('total_claims')} actual={len(claims)}")
+        if declared.get("snapshot_hash") and declared.get("snapshot_hash") != snapshot_hash:
+            set_violations.append("snapshot_hash mismatch")
+    else:
+        set_violations.append("missing claim_set declaration")
 
     reports = []
     passing_hashes = []
@@ -81,15 +100,20 @@ def main() -> int:
         if report.get("verdict") == "PASS" and report.get("actual_hash"):
             passing_hashes.append(report["actual_hash"])
 
+    failed_claims = [r for r in reports if r.get("verdict") != "PASS"]
+
     if not claims:
         status = "INDETERMINATE"
         reason = "no claims for state"
-    elif len(passing_hashes) != len(claims):
+    elif set_violations:
+        status = "FAILED"
+        reason = "claim set integrity failed"
+    elif failed_claims:
         status = "FAILED"
         reason = "one or more claims failed replay"
     else:
         status = "VERIFIED"
-        reason = "all claims replayed"
+        reason = "all claims replayed and claim set integrity held"
 
     root = merkle_root(passing_hashes)
     out = {
@@ -99,6 +123,12 @@ def main() -> int:
         "reason": reason,
         "claim_count": len(claims),
         "passing_claim_count": len(passing_hashes),
+        "claim_set": {
+            "total_claims": len(claims),
+            "snapshot_hash": snapshot_hash,
+            "completeness": declared.get("completeness", "UNDECLARED"),
+            "violations": set_violations
+        },
         "state_root": root,
         "leaf_hashes": sorted(passing_hashes),
         "replay_reports": reports,
