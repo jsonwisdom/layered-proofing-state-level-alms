@@ -1,0 +1,51 @@
+name: ALMS GitHub Direct Anchor
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - 'alms/anchors/**'
+      - 'site/reputation-aware-verifier.html'
+      - 'docs/NATIONAL_ROOT_DESIGN.md'
+      - 'fixtures/**'
+
+permissions:
+  contents: write
+
+jobs:
+  github-direct-anchor:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Record GitHub Direct anchor state
+        run: |
+          mkdir -p alms/anchors/runtime
+          cat > alms/anchors/runtime/github_direct_anchor_state.json <<EOF
+          {
+            "artifact": "GITHUB_DIRECT_ANCHOR_STATE",
+            "status": "GITHUB_ANCHORED_ONLY",
+            "onchain_status": "NOT_REGISTERED",
+            "public_label": "GITHUB_ANCHORED_ONLY",
+            "commit_sha": "${GITHUB_SHA}",
+            "repo": "${GITHUB_REPOSITORY}",
+            "run_id": "${GITHUB_RUN_ID}",
+            "run_attempt": "${GITHUB_RUN_ATTEMPT}",
+            "created_utc": "$(date -u +%Y-%m-%dT%H:%M:%SZ)",
+            "blocked_claims": [
+              "ANCHORED_ON_BASE",
+              "EAS_ATTESTED",
+              "ENS_COMPLETE",
+              "VERIFIED_NATIONAL_ROOT",
+              "ONCHAIN_CONFIRMED"
+            ],
+            "boundary": "GitHub Direct anchor only. No wallet signature, no Base/EAS transaction, no ENS update."
+          }
+          EOF
+
+      - name: Commit runtime anchor receipt
+        uses: stefanzweifel/git-auto-commit-action@v5
+        with:
+          commit_message: "Record GitHub Direct anchor runtime state"
+          file_pattern: alms/anchors/runtime/github_direct_anchor_state.json
