@@ -52,6 +52,44 @@ Later upgrade modes may include IPFS CID, Arweave ID, transaction hash, EAS UID,
 - `MN` — Minnesota budget proof lane
 - Later: 50 states + DC
 
+## Current MN reality bridge
+
+Claim:
+
+```text
+MN-BUDGET-2026-01
+```
+
+Current state:
+
+```json
+{
+  "replay": "PASS",
+  "state_root": "COMPUTED",
+  "status": "INDETERMINATE",
+  "reason": "snapshot-level source proof only; not full raw MMB source completeness"
+}
+```
+
+Frozen source snapshot:
+
+```text
+fixtures/mn/sources/mmb_budget_snapshot_2026-05-03.txt
+```
+
+Claim wrapper:
+
+```text
+fixtures/mn/mn_budget_2026_claim.json
+```
+
+Boundary:
+
+```text
+This proves integrity of the captured source snapshot.
+It does not yet prove the complete Minnesota budget fact against full official MMB raw source bytes.
+```
+
 ## Hard rules
 
 - No fake verification.
@@ -60,7 +98,15 @@ Later upgrade modes may include IPFS CID, Arweave ID, transaction hash, EAS UID,
 - Missing evidence means `INDETERMINATE`.
 - State roots require replayable receipts.
 - National roots require explicit state status labels.
+- Public explanations must not soften failed or indeterminate verdicts.
 - Humor is allowed; fake verification is forbidden.
+
+## Next recommended upgrades
+
+1. Freeze full official MMB artifact bytes: PDF, HTML dump, or extracted official table.
+2. Add a second MN claim to test multi-claim state roots.
+3. Generate or verify national root only after explicit state statuses exist.
+4. Add Base / ENS / EAS anchor only after wallet or chain receipt exists.
 
 ## Status
 
