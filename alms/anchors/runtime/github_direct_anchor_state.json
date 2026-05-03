@@ -1,0 +1,19 @@
+{
+  "artifact": "GITHUB_DIRECT_ANCHOR_STATE",
+  "status": "GITHUB_ANCHORED_ONLY",
+  "onchain_status": "NOT_REGISTERED",
+  "public_label": "GITHUB_ANCHORED_ONLY",
+  "commit_sha": "3405354d6ccc1012bb4773b7e1a812f3b910457d",
+  "repo": "jsonwisdom/layered-proofing-state-level-alms",
+  "run_id": "25290201863",
+  "run_attempt": "1",
+  "created_utc": "2026-05-03T20:39:00Z",
+  "blocked_claims": [
+    "ANCHORED_ON_BASE",
+    "EAS_ATTESTED",
+    "ENS_COMPLETE",
+    "VERIFIED_NATIONAL_ROOT",
+    "ONCHAIN_CONFIRMED"
+  ],
+  "boundary": "GitHub Direct anchor only. No wallet signature, no Base/EAS transaction, no ENS update."
+}
