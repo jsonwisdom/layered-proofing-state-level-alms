@@ -1,0 +1,99 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Reputation-Aware Verifier | Jay Wisdom</title>
+  <style>
+    :root { color-scheme: dark; --bg:#08090d; --panel:#12151d; --line:#2a3040; --text:#f4f6fb; --muted:#aab3c5; --ok:#8df7c1; --warn:#ffd166; --bad:#ff6b6b; }
+    body { margin:0; font-family: system-ui, -apple-system, Segoe UI, sans-serif; background: radial-gradient(circle at top,#172033,var(--bg) 46%); color:var(--text); line-height:1.55; }
+    main { max-width: 1040px; margin:auto; padding:44px 18px 80px; }
+    section { background:rgba(18,21,29,.94); border:1px solid var(--line); border-radius:22px; padding:24px; margin:18px 0; box-shadow:0 20px 60px rgba(0,0,0,.28); }
+    h1 { font-size:clamp(2.1rem,6vw,4.9rem); line-height:.95; margin:.1em 0 .25em; }
+    h2 { color:var(--warn); margin-top:0; }
+    textarea { width:100%; min-height:260px; box-sizing:border-box; border-radius:16px; border:1px solid var(--line); background:#07080c; color:var(--text); padding:14px; font:14px ui-monospace, SFMono-Regular, Menlo, monospace; }
+    button { border:0; border-radius:999px; padding:12px 18px; font-weight:700; cursor:pointer; margin:8px 8px 0 0; }
+    .pill { display:inline-block; border:1px solid var(--line); border-radius:999px; padding:6px 10px; margin:4px 6px 4px 0; color:var(--muted); }
+    .ok { color:var(--ok); border-color:rgba(141,247,193,.5); } .warn { color:var(--warn); border-color:rgba(255,209,102,.55); } .bad { color:var(--bad); border-color:rgba(255,107,107,.55); }
+    pre { background:#07080c; border:1px solid var(--line); border-radius:14px; padding:16px; overflow:auto; }
+    a { color:var(--ok); text-decoration:none; } a:hover { text-decoration:underline; }
+    .small { color:var(--muted); }
+  </style>
+</head>
+<body>
+<main>
+  <section>
+    <p class="small">jaywisdom.base · research anchor jaywisdom.eth · ALMS / Reputation Layer</p>
+    <h1>Reputation-Aware Verifier</h1>
+    <p>This page classifies a claim by domain, proof status, and safety boundary. It does not verify truth by itself. It helps users see whether a claim is personal, business, private, family, or ALMS-backed.</p>
+    <span class="pill warn">Model output is not proof</span>
+    <span class="pill ok">Receipts decide</span>
+    <span class="pill bad">Private data blocked</span>
+  </section>
+
+  <section>
+    <h2>Paste a claim JSON</h2>
+    <textarea id="input">{
+  "claim": "Jay Wisdom created a receipt-backed MN budget snapshot test.",
+  "domain": "alms",
+  "source": "fixtures/mn/sources/mmb_budget_snapshot_2026-05-03.txt",
+  "receipt_path": "UNSET",
+  "status": "REPLAYED",
+  "correction_path": "issues/new"
+}</textarea>
+    <br>
+    <button onclick="verifyClaim()">Verify boundaries</button>
+    <button onclick="loadExample()">Load example</button>
+  </section>
+
+  <section>
+    <h2>Verdict</h2>
+    <div id="badges"></div>
+    <pre id="output">Waiting for input...</pre>
+  </section>
+
+  <section>
+    <h2>Rules</h2>
+    <ul>
+      <li>Personal voice is not ALMS authority.</li>
+      <li>Business claims need evidence when factual.</li>
+      <li>Private and family material are blocked unless explicitly safe.</li>
+      <li>ALMS statuses require source, receipt/replay/root, and correction path.</li>
+      <li>Zora distributes identity artifacts; ALMS verifies claims.</li>
+    </ul>
+    <p class="small">Doctrine: <a href="../docs/JAYS_REPUTATION_LAYER.md">Jay's Reputation Layer</a> · <a href="../docs/AMERICAN_CITIZEN_RECURSIVE_PROTECTION.md">Citizen Recursive Protection</a></p>
+  </section>
+</main>
+<script>
+const allowedDomains = ["personal","business","private","family","alms"];
+const allowedStatuses = ["SUGGESTION","UNVERIFIED_CLAIM","RECEIPT_BACKED","REPLAYED","ROOTED","ANCHORED"];
+const blockedPublicLabels = ["VERIFIED","OFFICIAL","CERTIFIED","ONCHAIN_CONFIRMED","ENS_COMPLETE","CONTRACT_CONFIRMED"];
+function badge(text, cls){ return `<span class="pill ${cls}">${text}</span>`; }
+function verifyClaim(){
+  const out = document.getElementById('output');
+  const badges = document.getElementById('badges');
+  let obj;
+  try { obj = JSON.parse(document.getElementById('input').value); }
+  catch(e){ out.textContent = JSON.stringify({verdict:"FAIL", reason:"invalid JSON"}, null, 2); badges.innerHTML = badge('FAIL','bad'); return; }
+  const findings = [];
+  const domain = obj.domain;
+  const status = obj.status;
+  if(!allowedDomains.includes(domain)) findings.push({id:"DOMAIN", status:"FAIL", reason:"unknown domain"});
+  if(!allowedStatuses.includes(status)) findings.push({id:"STATUS", status:"FAIL", reason:"unknown or blocked status"});
+  if(blockedPublicLabels.includes(status)) findings.push({id:"BLOCKED_LABEL", status:"FAIL", reason:"public proof label requires receipts/anchors"});
+  if(domain === "private") findings.push({id:"PRIVATE", status:"BLOCKED", reason:"private domain is not public proof"});
+  if(domain === "family" && !obj.family_safe) findings.push({id:"FAMILY_REVIEW", status:"INDETERMINATE", reason:"family artifact requires safety review"});
+  if(["RECEIPT_BACKED","REPLAYED","ROOTED","ANCHORED"].includes(status) && (!obj.source || !obj.correction_path)) findings.push({id:"TRACEABILITY", status:"FAIL", reason:"source and correction_path required"});
+  if(status === "ANCHORED" && !obj.anchor_receipt) findings.push({id:"ANCHOR", status:"FAIL", reason:"ANCHored claim requires anchor_receipt"});
+  const verdict = findings.some(f=>f.status==="FAIL"||f.status==="BLOCKED") ? "FAIL" : (findings.length ? "INDETERMINATE" : "PASS");
+  badges.innerHTML = badge(verdict, verdict==="PASS"?'ok':verdict==="FAIL"?'bad':'warn') + badge(domain || 'NO_DOMAIN','warn') + badge(status || 'NO_STATUS','warn');
+  out.textContent = JSON.stringify({verdict, domain, status, findings, rule:"ALMS verifies artifacts, not human worth."}, null, 2);
+}
+function loadExample(){
+  document.getElementById('input').value = JSON.stringify({claim:"Wisdom Family artifact is ready for Zora distribution, anchor pending.", domain:"family", source:"alms/meme_court/zora/ZMC-0001.json", receipt_path:"alms/legacy/receipts/WFG-0001-receipt.json", status:"RECEIPT_BACKED", correction_path:"issues/new", family_safe:true}, null, 2);
+  verifyClaim();
+}
+verifyClaim();
+</script>
+</body>
+</html>
