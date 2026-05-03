@@ -1,0 +1,39 @@
+{
+  "claim_id": "MN-BUDGET-2026-01",
+  "layer": "CLAIM",
+  "state": "MN",
+  "claim_text": "The State of Minnesota enacted a FY2026-2027 biennial budget with a projected general fund budgetary balance of approximately $3.73 billion (after reserves) following the June 2025 legislative session. General Fund spending is in the $65-70 billion range for the biennium.",
+  "timestamp": "2026-05-03T19:45:00Z",
+  "source_url": "https://mn.gov/mmb/budget/current-budget/current-enacted-budget/",
+  "source": {
+    "description": "Official Minnesota Management and Budget (MMB) Current Enacted Budget documentation",
+    "source_url": "https://mn.gov/mmb/budget/current-budget/current-enacted-budget/"
+  },
+  "frozen_artifact": {
+    "mode": "repo",
+    "reference": "fixtures/mn/mn_budget_2026_claim.json",
+    "capture_date": "2026-05-03"
+  },
+  "hash": "UNSET_PENDING_COMMIT",
+  "receipt": {
+    "receipt_id": "MN-BUDGET-RECEIPT-001",
+    "status": "INDETERMINATE",
+    "notes": "Source URL present. Frozen artifact reference set to repo path. Awaiting commit, hash computation, and successful replay before any VERIFIED status.",
+    "replay_passed": false
+  },
+  "replay": {
+    "status": "PENDING",
+    "notes": "Replay not yet executed on committed bytes"
+  },
+  "state_root": {
+    "status": "PENDING"
+  },
+  "national_root": {
+    "status": "PENDING"
+  },
+  "public_explanation": {
+    "status": "PENDING",
+    "content_summary": "Verification pending. Claim intake only. No frozen artifact hash or replay completed. Status INDETERMINATE until full layered proofing completes.",
+    "explanation_hash": "UNSET"
+  }
+}
