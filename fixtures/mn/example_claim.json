@@ -1,0 +1,12 @@
+{
+  "layer": "CLAIM",
+  "claim_id": "MN-0001",
+  "state": "MN",
+  "claim_text": "Example claim for layered proof testing",
+  "timestamp": "2026-05-03T00:00:00Z",
+  "source_url": "https://example.com/source",
+  "frozen_artifact": {
+    "mode": "repo",
+    "reference": "https://example.com/source"
+  }
+}
