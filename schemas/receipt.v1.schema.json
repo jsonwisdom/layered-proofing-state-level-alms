@@ -1,0 +1,48 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "ReceiptV1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "receipt_id",
+    "receipt_type",
+    "authority",
+    "claim",
+    "claim_hash",
+    "source_uri",
+    "timestamp_utc"
+  ],
+  "properties": {
+    "receipt_id": {
+      "type": "string",
+      "pattern": "^REC-[0-9]{6}$"
+    },
+    "receipt_type": {
+      "type": "string",
+      "const": "PUBLIC_RECORD_VERIFICATION_V1"
+    },
+    "authority": {
+      "type": "boolean",
+      "const": false
+    },
+    "claim": {
+      "type": "string"
+    },
+    "claim_hash": {
+      "type": "string",
+      "pattern": "^sha256:[a-f0-9]{64}$"
+    },
+    "source_uri": {
+      "type": "string",
+      "format": "uri"
+    },
+    "timestamp_utc": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "supersedes": {
+      "type": "string",
+      "pattern": "^REC-[0-9]{6}$"
+    }
+  }
+}
