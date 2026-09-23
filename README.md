@@ -261,3 +261,19 @@ Bootstrap phase. Stress-test relentlessly.
 ```text
 Do not praise. Do not invent. Break it.
 ```
+
+
+## Authority Scope Compatibility
+
+Legacy artifacts in this repository may contain unscoped fields such as `"authority": false`.
+
+From now forward, those fields are interpreted as **machine/artifact non-authority** unless the artifact explicitly names another subject.
+
+```text
+JASON_OPERATOR_CONTROL != AI_AUTHORITY
+AI_AUTHORITY = FALSE
+MACHINE_AUTHORITY_CREATED = FALSE
+VERIFICATION_RESULT != LEGAL_AUTHORITY
+```
+
+Frozen receipts and historical hashes remain unchanged. This compatibility rule scopes their meaning without rewriting historical bytes.
